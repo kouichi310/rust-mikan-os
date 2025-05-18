@@ -1,0 +1,9 @@
+[build]
+target = "x86_64-rust-mikan-os-elf.json"
+
+[unstable]
+build-std = ["core"]
+
+[target.'x86_64-rust-mikan-os-elf.json']
+linker = "ld.lld"
+rustflags = "-C link-arg=-Tlink.ld"
