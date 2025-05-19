@@ -4,5 +4,5 @@ pub mod status;
 pub mod types;
 pub mod boot_services;
 pub mod memory;
-
-pub use system_table::SystemTable;
+pub mod file_systems;
+pub mod guids;

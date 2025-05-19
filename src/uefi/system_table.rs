@@ -14,7 +14,7 @@ pub struct EfiTableHeader {
 }
 
 #[repr(C)]
-pub struct SystemTable {
+pub struct EfiSystemTable<'a> {
     pub hdr: EfiTableHeader,
     pub firmware_vendor: *const Char16,
     pub firmware_revision: u32,
@@ -28,19 +28,19 @@ pub struct SystemTable {
     pub std_err: *mut EfiSimpleTextOutputProtocol,
     pub runtime_services: *mut EfiRuntimeService,
 
-    pub boot_services: *mut EfiBootServices,
+    pub boot_services: *mut EfiBootServices<'a>,
 
     pub number_of_table_entries: usize,
     pub config_table: *mut EfiConfigurationTable,
 
 }
 
-impl SystemTable {
+impl EfiSystemTable<'static> {
     pub fn con_out(&self) -> &mut EfiSimpleTextOutputProtocol {
         unsafe { &mut *self.con_out }
     }
 
-    pub fn boot_services(&self) -> &EfiBootServices {
+    pub fn boot_services(&self) -> &EfiBootServices<'static> {
         unsafe { &*self.boot_services }
     }
 }
