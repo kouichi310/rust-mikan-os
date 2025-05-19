@@ -48,12 +48,14 @@ pub extern "efiapi" fn efi_main(_image_handle: EfiHandle, system_table: &SystemT
         con_out.output_string(utf16!("Failed to get memory map.\r\n").as_ptr());
         return status;
     }
-
+    
     con_out.output_string(utf16!("Memory map acquired.\r\n").as_ptr());
 
-    loop {}
-
-    uefi::status::EfiStatus::Success
+    loop {
+        unsafe {
+            core::arch::asm!("hlt");
+        }
+    }
 }
 
 #[panic_handler]
