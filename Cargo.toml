@@ -8,3 +8,6 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[dependencies]
+utf16_literal = "0.2.1"
