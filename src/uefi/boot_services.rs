@@ -1,11 +1,11 @@
 use core::ffi::c_void;
 
-use super::{guids::EfiGuid, memory::EfiMemoryDescriptor, status::EfiStatus, types::{EfiHandle, NotImplemented}};
+use super::{guids::EfiGuid, memory::EfiMemoryDescriptor, status::EfiStatus, types::{EfiHandle, EfiTableHeader, NotImplemented}};
 
 
 #[repr(C)]
 pub struct EfiBootServices<'a> {
-    pub hdr: super::types::EfiTableHeader,
+    pub hdr: EfiTableHeader,
     pub raise_tpl: NotImplemented,
     pub restore_tpl: NotImplemented,
     pub allocate_pages: NotImplemented,
@@ -56,7 +56,7 @@ pub struct EfiBootServices<'a> {
         handle: EfiHandle,
         protocol: *const EfiGuid,
         agent_handle: EfiHandle,
-        cotroller_handle: EfiHandle,
+        controller_handle: EfiHandle,
     ) -> EfiStatus,
     open_protocol_infomation: NotImplemented,
     protocols_per_handle: NotImplemented,

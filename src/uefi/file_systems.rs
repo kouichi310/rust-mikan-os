@@ -31,7 +31,7 @@ pub struct EfiFileProtocol {
     pub revision: u64,
     pub open: extern "efiapi" fn(
         &EfiFileProtocol, 
-        &&EfiFileProtocol,
+        &mut *mut EfiFileProtocol,
         &Char16,
         u64,
         u64,

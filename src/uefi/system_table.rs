@@ -4,16 +4,6 @@ pub struct EfiRuntimeService {}
 pub struct EfiConfigurationTable {}
 
 #[repr(C)]
-#[derive(Clone, Copy)]
-pub struct EfiTableHeader {
-    pub signature: u64,
-    pub revision: u32,
-    pub header_size: u32,
-    pub crc32: u32,
-    pub reserved: u32,
-}
-
-#[repr(C)]
 pub struct EfiSystemTable<'a> {
     pub hdr: EfiTableHeader,
     pub firmware_vendor: *const Char16,

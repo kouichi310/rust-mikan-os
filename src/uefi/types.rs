@@ -11,14 +11,14 @@ pub type NotImplemented = usize;
 pub struct EfiHandle(pub *mut c_void);
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct EfiTableHeader {
-    signature: u64,
-    revision: u32,
+    pub signature: u64,
+    pub revision: u32,
     pub header_size: u32,
     pub crc32: u32,
     pub reserved: u32,
 }
-
 
 #[warn(dead_code)]
 #[repr(C)]
