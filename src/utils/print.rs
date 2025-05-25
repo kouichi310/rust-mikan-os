@@ -8,10 +8,9 @@ pub fn set_con_out(ptr: &'static EfiSimpleTextOutputProtocol) {
     }
 }
 
-
 pub fn uefi_print_raw<'a>(con_out: &EfiSimpleTextOutputProtocol, s: &str) {
     let mut buf: [u16; 256] = [0; 256];
-    let mut len =0;
+    let mut len = 0;
     for ch in s.encode_utf16() {
         if len < buf.len() {
             buf[len] = ch;

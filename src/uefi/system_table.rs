@@ -1,4 +1,8 @@
-use super::{boot_services::EfiBootServices, console::{EfiSimpleTextInputProtocol, EfiSimpleTextOutputProtocol}, types::*};
+use super::{
+    boot_services::EfiBootServices,
+    console::{EfiSimpleTextInputProtocol, EfiSimpleTextOutputProtocol},
+    types::*,
+};
 
 pub struct EfiRuntimeService {}
 pub struct EfiConfigurationTable {}
@@ -8,7 +12,7 @@ pub struct EfiSystemTable {
     pub hdr: EfiTableHeader,
     pub firmware_vendor: *const Char16,
     pub firmware_revision: u32,
-    
+
     pub console_in_handle: EfiHandle,
     pub con_in: *mut EfiSimpleTextInputProtocol,
     pub console_out_handle: EfiHandle,
@@ -22,7 +26,6 @@ pub struct EfiSystemTable {
 
     pub number_of_table_entries: usize,
     pub config_table: *mut EfiConfigurationTable,
-
 }
 
 impl<'a> EfiSystemTable {

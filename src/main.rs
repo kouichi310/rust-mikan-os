@@ -2,16 +2,24 @@
 #![no_std]
 
 use core::ptr::{self, null};
-use core::{panic::PanicInfo, ptr::{null_mut}};
+use core::{panic::PanicInfo, ptr::null_mut};
 use uefi::system_table::EfiSystemTable;
 
 mod uefi;
-use uefi::{boot_services::EfiBootServices, file_systems::{EfiFileProtocol, EfiLoadedImageProtocol, EfiSimpleFileSystemProtocol, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL}, guids::{EFI_LOADED_IMAGE_PROTOCOL_GUID, EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID}, status::EfiStatus, types::EfiHandle};
-use utils::print::{set_con_out};
+use uefi::{
+    boot_services::EfiBootServices,
+    file_systems::{
+        EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL, EfiFileProtocol, EfiLoadedImageProtocol,
+        EfiSimpleFileSystemProtocol,
+    },
+    guids::{EFI_LOADED_IMAGE_PROTOCOL_GUID, EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID},
+    status::EfiStatus,
+    types::EfiHandle,
+};
+use utils::print::set_con_out;
 
 #[macro_use]
 mod utils;
-
 
 struct MemoryMap<'a> {
     buffer: &'a mut [u8],
@@ -34,41 +42,59 @@ fn get_memory_map(memory_map: &mut MemoryMap<'_>, bs: &EfiBootServices) -> EfiSt
     }
 }
 
-fn open_root_dir(image_handle: EfiHandle, root: &mut *mut EfiFileProtocol, bs: &EfiBootServices) -> EfiStatus {
+fn open_root_dir(
+    image_handle: EfiHandle,
+    root: &mut *mut EfiFileProtocol,
+    bs: &EfiBootServices,
+) -> EfiStatus {
     let null_handle = EfiHandle(null_mut());
 
-
-    let loaded_image = bs.open_protocol::<EfiLoadedImageProtocol>(
+    let loaded_image = match bs.open_protocol::<EfiLoadedImageProtocol>(
         image_handle,
         &EFI_LOADED_IMAGE_PROTOCOL_GUID,
         image_handle,
         null_handle,
         EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL,
-    ).unwrap();
+    ) {
+        Ok(image) => image,
+        Err(status) => {
+            println!("Failed to open Loaded Image Protocol: {:?}", status);
+            return status;
+        }
+    };
     println!("Loaded Image Protocol opened: {:?}", loaded_image);
 
-    let fs = bs.open_protocol::<EfiSimpleFileSystemProtocol>(
-        unsafe{(*loaded_image).device_handle},
+    let fs = match bs.open_protocol::<EfiSimpleFileSystemProtocol>(
+        unsafe { (*loaded_image).device_handle },
         &EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID,
         image_handle,
         null_handle,
         EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL,
-    ).unwrap();
+    ) {
+        Ok(fs) => fs,
+        Err(status) => {
+            println!("Failed to open Simple File System Protocol: {:?}", status);
+            return status;
+        }
+    };
 
     println!("Simple File System Protocol opened: {:?}", fs);
 
-    unsafe{(*fs).open_volume(root)};
+    unsafe { (*fs).open_volume(root) };
 
     EfiStatus::Success
 }
 
 #[unsafe(no_mangle)]
-pub extern "efiapi" fn efi_main(image_handle: EfiHandle, system_table: &'static EfiSystemTable) -> EfiStatus {
+pub extern "efiapi" fn efi_main(
+    image_handle: EfiHandle,
+    system_table: &'static EfiSystemTable,
+) -> EfiStatus {
     set_con_out(system_table.con_out());
     system_table.con_out().reset(true);
     println!("Hello, UEFI World!");
 
-    let mut buf = [0u8; 4096*4];
+    let mut buf = [0u8; 4096 * 4];
     let mut memory_map = MemoryMap {
         buffer: &mut buf,
         map_size: 0,
@@ -104,5 +130,4 @@ fn panic(_info: &PanicInfo) -> ! {
             core::arch::asm!("hlt");
         }
     }
-    
 }

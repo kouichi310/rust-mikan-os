@@ -2,8 +2,12 @@ use core::ffi::c_void;
 
 use crate::println;
 
-use super::{guids::EfiGuid, memory::EfiMemoryDescriptor, status::EfiStatus, types::{EfiHandle, EfiMemoryType, EfiTableHeader, NotImplemented}};
-
+use super::{
+    guids::EfiGuid,
+    memory::EfiMemoryDescriptor,
+    status::EfiStatus,
+    types::{EfiHandle, EfiMemoryType, EfiTableHeader, NotImplemented},
+};
 
 #[repr(C)]
 pub struct EfiBootServices {
@@ -81,15 +85,15 @@ impl EfiBootServices {
         let mut map_size = buffer.len();
         let mut map_key = 0usize;
         let mut descriptor_size = 0usize;
-        let mut descriptor_version= 0u32;
+        let mut descriptor_version = 0u32;
 
         let status = (self.get_memory_map)(
-                &mut map_size,
-                buffer.as_mut_ptr() as *mut EfiMemoryDescriptor,
-                &mut map_key,
-                &mut descriptor_size,
-                &mut descriptor_version,
-            );
+            &mut map_size,
+            buffer.as_mut_ptr() as *mut EfiMemoryDescriptor,
+            &mut map_key,
+            &mut descriptor_size,
+            &mut descriptor_version,
+        );
 
         if status != EfiStatus::Success {
             return Err(status);
@@ -117,7 +121,7 @@ impl EfiBootServices {
             attributes,
         );
 
-        if status ==EfiStatus::Success  && !interface.is_null(){
+        if status == EfiStatus::Success && !interface.is_null() {
             Ok(interface as *mut T)
         } else {
             println!("----debug info----");

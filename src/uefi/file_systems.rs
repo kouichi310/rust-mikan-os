@@ -1,5 +1,10 @@
+use super::{
+    guids::EfiGuid,
+    status::EfiStatus,
+    system_table::EfiSystemTable,
+    types::{Char16, EfiHandle, EfiMemoryType},
+};
 use core::ffi::c_void;
-use super::{guids::EfiGuid, status::EfiStatus, system_table::EfiSystemTable, types::{Char16, EfiHandle, EfiMemoryType}};
 
 pub const EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL: u32 = 0x00000001;
 
@@ -25,12 +30,11 @@ pub struct EfiLoadedImageProtocol<'a> {
     unload: extern "efiapi" fn(image_handle: EfiHandle) -> EfiStatus,
 }
 
-
 #[repr(C)]
 pub struct EfiFileProtocol {
     pub revision: u64,
     pub open: extern "efiapi" fn(
-        &EfiFileProtocol, 
+        &EfiFileProtocol,
         &mut *mut EfiFileProtocol,
         &Char16,
         u64,
@@ -38,30 +42,12 @@ pub struct EfiFileProtocol {
     ) -> EfiStatus,
     pub close: extern "efiapi" fn(&EfiFileProtocol) -> EfiStatus,
     pub delete: extern "efiapi" fn(&EfiFileProtocol) -> EfiStatus,
-    pub read: extern "efiapi" fn(
-        &EfiFileProtocol, 
-        &usize,
-        &c_void,
-    ) -> EfiStatus,
-    pub write: extern "efiapi" fn(
-        &EfiFileProtocol, 
-        &usize,
-        &c_void,
-    ) -> EfiStatus,
+    pub read: extern "efiapi" fn(&EfiFileProtocol, &usize, &c_void) -> EfiStatus,
+    pub write: extern "efiapi" fn(&EfiFileProtocol, &usize, &c_void) -> EfiStatus,
     pub get_position: extern "efiapi" fn(&EfiFileProtocol, &u64) -> EfiStatus,
     pub set_position: extern "efiapi" fn(&EfiFileProtocol, &u64) -> EfiStatus,
-    pub get_info: extern "efiapi" fn(
-        &EfiFileProtocol,
-        &EfiGuid,
-        &usize,
-        &c_void,
-    ) -> EfiStatus,
-    pub set_info: extern "efiapi" fn(
-        &EfiFileProtocol,
-        &EfiGuid,
-        &usize,
-        &c_void,
-    ) -> EfiStatus,
+    pub get_info: extern "efiapi" fn(&EfiFileProtocol, &EfiGuid, &usize, &c_void) -> EfiStatus,
+    pub set_info: extern "efiapi" fn(&EfiFileProtocol, &EfiGuid, &usize, &c_void) -> EfiStatus,
     pub flash: extern "efiapi" fn(&EfiFileProtocol) -> EfiStatus,
     pub open_ex: extern "efiapi" fn(
         &EfiFileProtocol,

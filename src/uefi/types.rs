@@ -1,8 +1,7 @@
 #[warn(dead_code)]
 use core::ffi::c_void;
 
-
-pub type Char16  = u16;
+pub type Char16 = u16;
 pub type EfiPhysicalAddress = u64;
 pub type EfiVirtualAddress = u64;
 pub type NotImplemented = usize;
