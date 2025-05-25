@@ -1,10 +1,16 @@
 use core::ffi::c_void;
 
-use super::{guids::EfiGuid, memory::EfiMemoryDescriptor, status::EfiStatus, types::{EfiHandle, EfiTableHeader, NotImplemented}};
+use crate::println;
 
+use super::{
+    guids::EfiGuid,
+    memory::EfiMemoryDescriptor,
+    status::EfiStatus,
+    types::{EfiHandle, EfiMemoryType, EfiTableHeader, NotImplemented},
+};
 
 #[repr(C)]
-pub struct EfiBootServices<'a> {
+pub struct EfiBootServices {
     pub hdr: EfiTableHeader,
     pub raise_tpl: NotImplemented,
     pub restore_tpl: NotImplemented,
@@ -17,8 +23,9 @@ pub struct EfiBootServices<'a> {
         *mut usize,
         *mut u32,
     ) -> EfiStatus,
-    pub allocate_pool: NotImplemented,
-    pub free_pool: NotImplemented,
+    allocate_pool:
+        extern "efiapi" fn(pooltype: EfiMemoryType, size: usize, buffer: &mut *mut u8) -> EfiStatus,
+    free_pool: extern "efiapi" fn(address: *mut u8) -> EfiStatus,
     create_event: NotImplemented,
     set_timer: NotImplemented,
     wait_for_event: NotImplemented,
@@ -29,7 +36,7 @@ pub struct EfiBootServices<'a> {
     reinstall_protocol_interface: NotImplemented,
     uninstall_protocol_interface: NotImplemented,
     handle_protocol: NotImplemented,
-    reserved: &'a c_void,
+    reserved: NotImplemented,
     register_protocol_notify: NotImplemented,
     locate_handle: NotImplemented,
     locate_device_path: NotImplemented,
@@ -47,7 +54,7 @@ pub struct EfiBootServices<'a> {
     open_protocol: extern "efiapi" fn(
         handle: EfiHandle,
         protocol: *const EfiGuid,
-        interface: *mut *mut c_void,
+        interface: &mut *mut c_void,
         agent_handle: EfiHandle,
         controller_handle: EfiHandle,
         attributes: u32,
@@ -70,7 +77,7 @@ pub struct EfiBootServices<'a> {
     create_event_ex: NotImplemented,
 }
 
-impl EfiBootServices<'static> {
+impl EfiBootServices {
     pub fn get_memory_map(
         &self,
         buffer: &mut [u8],
@@ -78,15 +85,15 @@ impl EfiBootServices<'static> {
         let mut map_size = buffer.len();
         let mut map_key = 0usize;
         let mut descriptor_size = 0usize;
-        let mut descriptor_version= 0u32;
+        let mut descriptor_version = 0u32;
 
         let status = (self.get_memory_map)(
-                &mut map_size,
-                buffer.as_mut_ptr() as *mut EfiMemoryDescriptor,
-                &mut map_key,
-                &mut descriptor_size,
-                &mut descriptor_version,
-            );
+            &mut map_size,
+            buffer.as_mut_ptr() as *mut EfiMemoryDescriptor,
+            &mut map_key,
+            &mut descriptor_size,
+            &mut descriptor_version,
+        );
 
         if status != EfiStatus::Success {
             return Err(status);
@@ -94,22 +101,38 @@ impl EfiBootServices<'static> {
         Ok((map_size, map_key, descriptor_size, descriptor_version))
     }
 
-    pub fn open_protocol(
+    pub fn open_protocol<T>(
         &self,
         handle: EfiHandle,
         protocol: &EfiGuid,
-        interface: *mut *mut c_void,
         agent_handle: EfiHandle,
         controller_handle: EfiHandle,
         attributes: u32,
-    ) -> EfiStatus {
-        (self.open_protocol)(
+    ) -> Result<*mut T, EfiStatus> {
+        let mut interface: *mut c_void = core::ptr::null_mut();
+        let interface_ptr = &mut interface;
+
+        let status = (self.open_protocol)(
             handle,
             protocol as *const EfiGuid,
-            interface,
+            interface_ptr,
             agent_handle,
             controller_handle,
             attributes,
-        )
+        );
+
+        if status == EfiStatus::Success && !interface.is_null() {
+            Ok(interface as *mut T)
+        } else {
+            println!("----debug info----");
+            println!("Status: {:?}", status);
+            println!("{:?}", handle);
+            println!("{:?}", protocol);
+            println!("{:?}", agent_handle);
+            println!("{:?}", controller_handle);
+            println!("{:?}", attributes);
+            println!("----debug end----");
+            Err(status)
+        }
     }
 }

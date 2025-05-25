@@ -1,3 +1,4 @@
 /target
 disk.img
 mikanos-build-rust/
+qemu.log

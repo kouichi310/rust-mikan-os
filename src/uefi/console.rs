@@ -1,5 +1,5 @@
-use super::types::*;
 use super::status::EfiStatus;
+use super::types::*;
 
 #[repr(C)]
 pub struct EfiSimpleTextOutputProtocol {
