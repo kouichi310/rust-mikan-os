@@ -12,7 +12,7 @@ pub struct EfiDevicePathProtocol {}
 pub struct EfiLoadedImageProtocol<'a> {
     revision: u32,
     parent_handle: EfiHandle,
-    system_table: EfiSystemTable<'a>,
+    system_table: &'a EfiSystemTable,
     pub device_handle: EfiHandle,
     file_path: &'a EfiDevicePathProtocol,
     reserved: &'a c_void,
