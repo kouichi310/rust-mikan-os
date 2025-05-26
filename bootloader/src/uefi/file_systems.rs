@@ -87,7 +87,13 @@ impl EfiFileProtocol {
         );
 
         if _res == EfiStatus::Success {
-            unsafe { Ok(new_handle.as_ref().unwrap()) }
+            unsafe {
+                if let Some(handle_ref) = new_handle.as_ref() {
+                    Ok(handle_ref)
+                } else {
+                    Err(EfiStatus::DeviceError) // Return an appropriate error if null
+                }
+            }
         } else {
             Err(_res)
         }
