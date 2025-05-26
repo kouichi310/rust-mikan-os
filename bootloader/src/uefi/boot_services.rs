@@ -6,7 +6,10 @@ use super::{
     guids::EfiGuid,
     memory::EfiMemoryDescriptor,
     status::EfiStatus,
-    types::{EfiHandle, EfiMemoryType, EfiTableHeader, NotImplemented},
+    types::{
+        EfiAllocateType, EfiHandle, EfiMemoryType, EfiPhysicalAddress, EfiTableHeader,
+        NotImplemented,
+    },
 };
 
 #[repr(C)]
@@ -14,7 +17,12 @@ pub struct EfiBootServices {
     pub hdr: EfiTableHeader,
     pub raise_tpl: NotImplemented,
     pub restore_tpl: NotImplemented,
-    pub allocate_pages: NotImplemented,
+    pub allocate_pages: extern "efiapi" fn(
+        allocate_type: EfiAllocateType,
+        memory_type: EfiMemoryType,
+        pages: usize,
+        memory: &EfiPhysicalAddress,
+    ) -> EfiStatus,
     pub free_pages: NotImplemented,
     pub get_memory_map: extern "efiapi" fn(
         *mut usize,
@@ -45,7 +53,7 @@ pub struct EfiBootServices {
     start_image: NotImplemented,
     exit: NotImplemented,
     unload_image: NotImplemented,
-    exit_boot_service: NotImplemented,
+    exit_boot_service: extern "efiapi" fn(image_handle: EfiHandle, map_key: usize) -> EfiStatus,
     get_next_monotonic_count: NotImplemented,
     stall: NotImplemented,
     set_watchdog_timer: NotImplemented,
@@ -133,6 +141,40 @@ impl EfiBootServices {
             uefi_println!("{:?}", attributes);
             uefi_println!("----debug end----");
             Err(status)
+        }
+    }
+
+    pub fn allocate_pages(
+        &self,
+        allocate_type: EfiAllocateType,
+        memory_type: EfiMemoryType,
+        mut pages: usize,
+        mut memory: EfiPhysicalAddress,
+    ) -> Result<EfiPhysicalAddress, EfiStatus> {
+        if (pages % 0x1000) != 0 {
+            //4KiBアライメント
+            pages = pages.div_ceil(0x1000);
+        }
+
+        let _res = (self.allocate_pages)(allocate_type, memory_type, pages, &mut memory);
+        if _res == EfiStatus::Success {
+            Ok(memory)
+        } else {
+            Err(_res)
+        }
+    }
+
+    pub fn exit_boot_service(
+        &self,
+        image_handle: EfiHandle,
+        map_key: usize,
+    ) -> Result<EfiStatus, EfiStatus> {
+        let _res = (self.exit_boot_service)(image_handle, map_key);
+
+        if _res == EfiStatus::Success {
+            Ok(_res)
+        } else {
+            Err(_res)
         }
     }
 }

@@ -23,9 +23,9 @@ pub struct EfiTableHeader {
 #[allow(dead_code)]
 #[repr(C)]
 pub enum EfiMemoryType {
-    EfiReservedMemoryType = 0,
-    EfiLoaderCode = 1,
-    EfiLoaderData = 2,
+    EfiReservedMemoryType,
+    EfiLoaderCode,
+    EfiLoaderData,
     EfiBootServicesCode,
     EfiBootServicesData,
     EfiRuntimeServicesCode,
@@ -55,4 +55,40 @@ pub enum EfiFileOpenMode {
 #[repr(u64)]
 pub enum EfiFileAttribute {
     None = 0x0,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct EfiTime {
+    year: u64,
+    month: u8,
+    day: u8,
+    hour: u8,
+    minute: u8,
+    second: u8,
+    _pad1: u8,
+    nanosecond: u32,
+    time_zone: i16,
+    daylight: u8,
+    _pad2: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct EfiFileInfo {
+    pub size: u64,
+    pub file_size: u64,
+    pub physical_size: u64,
+    pub create_time: EfiTime,
+    pub last_access_time: EfiTime,
+    pub modification_time: EfiTime,
+    pub attribute: u64,
+}
+
+#[repr(C)]
+pub enum EfiAllocateType {
+    AllocateAnyPages,
+    AllocateMaxAddress,
+    AllocateAddress,
+    MaxAllocateType,
 }

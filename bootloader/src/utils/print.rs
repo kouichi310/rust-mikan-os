@@ -1,10 +1,16 @@
+use core::{
+    ptr::null_mut,
+    sync::atomic::{AtomicPtr, Ordering},
+};
+
 use crate::uefi::console::EfiSimpleTextOutputProtocol;
-use spin::Once;
 
-static CON_OUT: Once<&'static EfiSimpleTextOutputProtocol> = Once::new();
+static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(null_mut());
 
-pub fn set_con_out(ptr: &'static EfiSimpleTextOutputProtocol) {
-    CON_OUT.call_once(|| ptr);
+pub fn setup_console(table: &crate::uefi::system_table::EfiSystemTable) {
+    let out = table.con_out();
+    // AtomicPtr に格納
+    CON_OUT.store(out as *const _ as *mut _, Ordering::SeqCst);
 }
 
 fn str_to_utf16_buf(s: &str, buf: &mut [u16]) -> usize {
@@ -21,10 +27,12 @@ fn str_to_utf16_buf(s: &str, buf: &mut [u16]) -> usize {
 }
 
 pub fn uefi_print_raw(s: &str) {
-    if let Some(con_out) = CON_OUT.get() {
-        let mut buf = [0u16; 256];
-        str_to_utf16_buf(s, &mut buf);
-        con_out.output_string(buf.as_ptr());
+    unsafe {
+        if let Some(con_out) = CON_OUT.load(Ordering::SeqCst).as_ref() {
+            let mut buf = [0u16; 256];
+            str_to_utf16_buf(s, &mut buf);
+            con_out.output_string(buf.as_ptr());
+        }
     }
 }
 
