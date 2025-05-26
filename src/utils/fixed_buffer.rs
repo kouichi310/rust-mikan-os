@@ -1,5 +1,7 @@
 use core::fmt::{self, Write};
 
+use crate::uefi::types::Char16;
+
 pub struct FixedBuffer<'a> {
     buf: &'a mut [u8],
     pos: usize,
@@ -40,4 +42,20 @@ impl<'a> Write for FixedBuffer<'a> {
         self.pos += bytes.len();
         Ok(())
     }
+}
+
+pub fn encode_utf16_null_terminated(
+    utf8_str: &str,
+    buffer: &mut [Char16],
+) -> Option<*const Char16> {
+    let mut i = 0;
+    for code_unit in utf8_str.encode_utf16() {
+        if i >= buffer.len() - 1 {
+            return None; // 入らない
+        }
+        buffer[i] = code_unit;
+        i += 1;
+    }
+    buffer[i] = 0; // null終端
+    Some(buffer.as_ptr())
 }

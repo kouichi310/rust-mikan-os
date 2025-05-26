@@ -40,3 +40,24 @@ pub enum EfiMemoryType {
     EfiUnacceptedMemoryType,
     EfiMaxMemoryType,
 }
+
+#[derive(Clone, Copy, Debug)]
+#[repr(u64)]
+pub enum EfiFileOpenMode {
+    Read = 0x1,
+    ReadWrite = 0x2 | 0x1,
+    CreateReadWrite = 0x8000_0000_0000_0000 | 0x2 | 0x1,
+}
+
+#[derive(Clone, Copy, Debug)]
+#[repr(u64)]
+pub enum EfiFileAttribute {
+    None = 0x0,
+    ReadOnly = 0x1,
+    Hidden = 0x2,
+    System = 0x4,
+    Reserved = 0x8,
+    Directory = 0x10,
+    Archive = 0x20,
+    ValidAttributes = 0x37,
+}
