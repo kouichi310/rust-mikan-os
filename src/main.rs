@@ -79,7 +79,7 @@ fn save_memory_map(
 
     let written_size = file.write(len, header.as_ptr()).unwrap();
     if written_size != len {
-        println!("Failed to write header to file");
+        uefi_println!("Failed to write header to file");
         return EfiStatus::Success;
     }
 
@@ -112,7 +112,7 @@ fn save_memory_map(
             .write(fb.as_bytes().len(), fb.as_bytes().as_ptr())
             .unwrap();
         if _res != fb.as_bytes().len() {
-            println!("Failed to write memory descriptor to file");
+            uefi_println!("Failed to write memory descriptor to file");
             return EfiStatus::Success;
         }
 
@@ -121,7 +121,7 @@ fn save_memory_map(
     }
 
     file.close().unwrap();
-    println!("Memory map saved successfully.");
+    uefi_println!("Memory map saved successfully.");
 
     EfiStatus::Success
 }
@@ -141,12 +141,12 @@ fn open_root_dir(
     ) {
         Ok(image) => unsafe { (image as *const EfiLoadedImageProtocol).as_ref().unwrap() },
         Err(status) => {
-            println!("Failed to open Loaded Image Protocol: {:?}", status);
+            uefi_println!("Failed to open Loaded Image Protocol: {:?}", status);
             return Err(status);
         }
     };
 
-    println!("Loaded Image Protocol opened successfully");
+    uefi_println!("Loaded Image Protocol opened successfully");
 
     let fs = match bs.open_protocol::<EfiSimpleFileSystemProtocol>(
         loaded_image.device_handle,
@@ -157,12 +157,12 @@ fn open_root_dir(
     ) {
         Ok(fs) => unsafe { fs.as_mut().unwrap() },
         Err(status) => {
-            println!("Failed to open Simple File System Protocol: {:?}", status);
+            uefi_println!("Failed to open Simple File System Protocol: {:?}", status);
             return Err(status);
         }
     };
 
-    println!("Simple File System Protocol opened successfully");
+    uefi_println!("Simple File System Protocol opened successfully");
 
     fs.open_volume()
 }
@@ -174,7 +174,7 @@ pub extern "efiapi" fn efi_main(
 ) -> EfiStatus {
     set_con_out(system_table.con_out());
     system_table.con_out().reset(true);
-    println!("Hello, UEFI World!");
+    uefi_println!("Hello, UEFI World!");
 
     let mut buf = [0u8; 4096 * 4];
     let mut memory_map = MemoryMap {
@@ -187,14 +187,14 @@ pub extern "efiapi" fn efi_main(
 
     let status = get_memory_map(&mut memory_map, system_table.boot_services());
     if status != EfiStatus::Success {
-        println!("Failed to get memory map");
+        uefi_println!("Failed to get memory map");
         return status;
     }
 
-    println!("Memory map acquired.");
+    uefi_println!("Memory map acquired.");
 
     let efi_file_proto = open_root_dir(image_handle, system_table.boot_services()).unwrap();
-    println!("Root directory opened successfully");
+    uefi_println!("Root directory opened successfully");
 
     let opened_handle = efi_file_proto
         .open(

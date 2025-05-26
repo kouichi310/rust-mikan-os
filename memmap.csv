@@ -1,4 +1,4 @@
-Index, Type, Type(name),               PhysicalStart,   NumberOfPages,  Attribute
+Index,		Type,	Type(name),	PhysicalStart,	NumberOfPages,	Attribute
 0     3      Boot Services Code        0x0              0x1          0xf
 1     7      Conventional Memory       0x1000           0x9f         0xf
 2     7      Conventional Memory       0x100000         0x700        0xf
@@ -8,9 +8,9 @@ Index, Type, Type(name),               PhysicalStart,   NumberOfPages,  Attribut
 6     4      Boot Services Data        0x900000         0xb00        0xf
 7     7      Conventional Memory       0x1400000        0x3ab36      0xf
 8     4      Boot Services Data        0x3bf36000       0x20         0xf
-9     7      Conventional Memory       0x3bf56000       0x2730       0xf
-10    1      Loader Code               0x3e686000       0xa          0xf
-11    7      Conventional Memory       0x3e690000       0x6          0xf
+9     7      Conventional Memory       0x3bf56000       0x272e       0xf
+10    1      Loader Code               0x3e684000       0xb          0xf
+11    7      Conventional Memory       0x3e68f000       0x7          0xf
 12    4      Boot Services Data        0x3e696000       0xa          0xf
 13    9      ACPI Reclaim Memory       0x3e6a0000       0x1          0xf
 14    4      Boot Services Data        0x3e6a1000       0x1ea        0xf

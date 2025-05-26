@@ -78,7 +78,13 @@ impl EfiFileProtocol {
         let file_name_ptr = encode_utf16_null_terminated(file_name, &mut utf16_buf)
             .expect("Failed to encode file name to UTF-16");
 
-        let _res = (self.open)(self, new_handle_ptr, file_name_ptr, mode, attributes);
+        let _res = (self.open)(
+            self,
+            new_handle_ptr,
+            file_name_ptr.as_ptr(),
+            mode,
+            attributes,
+        );
 
         if _res == EfiStatus::Success {
             unsafe { Ok(new_handle.as_ref().unwrap()) }

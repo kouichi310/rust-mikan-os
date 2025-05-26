@@ -1,6 +1,6 @@
 use core::ffi::c_void;
 
-use crate::println;
+use crate::uefi_println;
 
 use super::{
     guids::EfiGuid,
@@ -124,14 +124,14 @@ impl EfiBootServices {
         if status == EfiStatus::Success && !interface.is_null() {
             Ok(interface as *mut T)
         } else {
-            println!("----debug info----");
-            println!("Status: {:?}", status);
-            println!("{:?}", handle);
-            println!("{:?}", protocol);
-            println!("{:?}", agent_handle);
-            println!("{:?}", controller_handle);
-            println!("{:?}", attributes);
-            println!("----debug end----");
+            uefi_println!("----debug info----");
+            uefi_println!("Status: {:?}", status);
+            uefi_println!("{:?}", handle);
+            uefi_println!("{:?}", protocol);
+            uefi_println!("{:?}", agent_handle);
+            uefi_println!("{:?}", controller_handle);
+            uefi_println!("{:?}", attributes);
+            uefi_println!("----debug end----");
             Err(status)
         }
     }
