@@ -171,7 +171,8 @@ fn load_kernel(root: &EfiFileProtocol, bs: &EfiBootServices) -> Result<fn(), Efi
 
     kernel.read(size, KERNEL_BASE_ADDR)?;
 
-    let entry = unsafe { *((KERNEL_BASE_ADDR + 24) as *const u64) };
+    const KERNEL_ENTRY_OFFSET: usize = 24;
+    let entry = unsafe { *((KERNEL_BASE_ADDR + KERNEL_ENTRY_OFFSET) as *const u64) };
     Ok(unsafe { core::mem::transmute::<*const (), fn()>(entry as usize as *const ()) })
 }
 
