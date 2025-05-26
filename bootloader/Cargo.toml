@@ -1,0 +1,8 @@
+[package]
+name = "rust_mikan_os_bootloader"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+spin = "0.10.0"
+utf16_literal = "0.2.1"

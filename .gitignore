@@ -1,4 +1,7 @@
 /target
+/mnt
 disk.img
 mikanos-build-rust/
 qemu.log
+bootloader/target/
+kernel/target/
