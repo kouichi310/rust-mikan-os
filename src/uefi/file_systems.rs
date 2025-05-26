@@ -96,10 +96,6 @@ impl EfiFileProtocol {
         }
     }
 
-    pub fn read(&self, buffer_size: &usize, buffer: &c_void) -> EfiStatus {
-        (self.read)(self, buffer_size, buffer)
-    }
-
     pub fn write(&self, buffer_size: usize, buffer: *const u8) -> Result<usize, EfiStatus> {
         let mut written_size = buffer_size;
 
@@ -124,7 +120,7 @@ pub struct EfiSimpleFileSystemProtocol {
 impl EfiSimpleFileSystemProtocol {
     pub fn open_volume(&mut self) -> Result<&EfiFileProtocol, EfiStatus> {
         let mut efi_file_proto = ptr::null_mut();
-        let mut efi_file_proto_ptr = &mut efi_file_proto;
+        let efi_file_proto_ptr = &mut efi_file_proto;
 
         let _res = (self.open_volume)(self, efi_file_proto_ptr);
         if _res == EfiStatus::Success {

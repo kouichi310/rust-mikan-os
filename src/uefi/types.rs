@@ -20,6 +20,7 @@ pub struct EfiTableHeader {
     pub reserved: u32,
 }
 
+#[allow(dead_code)]
 #[repr(C)]
 pub enum EfiMemoryType {
     EfiReservedMemoryType = 0,
@@ -41,6 +42,7 @@ pub enum EfiMemoryType {
     EfiMaxMemoryType,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 #[repr(u64)]
 pub enum EfiFileOpenMode {
@@ -53,11 +55,4 @@ pub enum EfiFileOpenMode {
 #[repr(u64)]
 pub enum EfiFileAttribute {
     None = 0x0,
-    ReadOnly = 0x1,
-    Hidden = 0x2,
-    System = 0x4,
-    Reserved = 0x8,
-    Directory = 0x10,
-    Archive = 0x20,
-    ValidAttributes = 0x37,
 }

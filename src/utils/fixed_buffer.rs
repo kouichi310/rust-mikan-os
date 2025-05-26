@@ -13,20 +13,8 @@ impl<'a> FixedBuffer<'a> {
         Self { buf, pos: 0 }
     }
 
-    pub fn clear(&mut self) {
-        self.pos = 0;
-    }
-
     pub fn as_bytes(&self) -> &[u8] {
         &self.buf[..self.pos]
-    }
-
-    pub fn len(&self) -> usize {
-        self.pos
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.pos == 0
     }
 }
 

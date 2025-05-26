@@ -1,9 +1,8 @@
 #![no_main]
 #![no_std]
 
-use core::ptr::{self, null};
-use core::{panic::PanicInfo, ptr::null_mut};
 use core::fmt::Write;
+use core::{panic::PanicInfo, ptr::null_mut};
 use uefi::memory::EfiMemoryDescriptor;
 use uefi::system_table::EfiSystemTable;
 
@@ -84,7 +83,7 @@ fn save_memory_map(
         return EfiStatus::Success;
     }
 
-    let mut index =0;
+    let mut index = 0;
     let mut offset = 0;
 
     while offset < map_size {
@@ -106,9 +105,12 @@ fn save_memory_map(
             memory_descriptor.physical_start,
             memory_descriptor.number_of_pages,
             memory_descriptor.attribute,
-        ).unwrap();
+        )
+        .unwrap();
 
-        let _res = file.write(fb.as_bytes().len(), fb.as_bytes().as_ptr()).unwrap();
+        let _res = file
+            .write(fb.as_bytes().len(), fb.as_bytes().as_ptr())
+            .unwrap();
         if _res != fb.as_bytes().len() {
             println!("Failed to write memory descriptor to file");
             return EfiStatus::Success;
@@ -137,12 +139,7 @@ fn open_root_dir(
         null_handle,
         EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL,
     ) {
-        Ok(image) => {
-            unsafe {((image as *const _) as *const EfiLoadedImageProtocol)
-                .as_ref()
-                .unwrap()
-            }
-        },
+        Ok(image) => unsafe { (image as *const EfiLoadedImageProtocol).as_ref().unwrap() },
         Err(status) => {
             println!("Failed to open Loaded Image Protocol: {:?}", status);
             return Err(status);
@@ -158,12 +155,7 @@ fn open_root_dir(
         null_handle,
         EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL,
     ) {
-        Ok(fs) => {
-            unsafe { (fs as *mut EfiSimpleFileSystemProtocol)
-                .as_mut()
-                .unwrap()
-            }
-        },
+        Ok(fs) => unsafe { fs.as_mut().unwrap() },
         Err(status) => {
             println!("Failed to open Simple File System Protocol: {:?}", status);
             return Err(status);
@@ -204,13 +196,20 @@ pub extern "efiapi" fn efi_main(
     let efi_file_proto = open_root_dir(image_handle, system_table.boot_services()).unwrap();
     println!("Root directory opened successfully");
 
-    let opened_handle = efi_file_proto.open(
-        "\\memmap.csv",
-        EfiFileOpenMode::CreateReadWrite,
-        EfiFileAttribute::None,
-    ).unwrap();
+    let opened_handle = efi_file_proto
+        .open(
+            "\\memmap.csv",
+            EfiFileOpenMode::CreateReadWrite,
+            EfiFileAttribute::None,
+        )
+        .unwrap();
 
-    save_memory_map(&memory_map.buffer, &opened_handle, memory_map.descriptor_size, memory_map.map_size);
+    save_memory_map(
+        memory_map.buffer,
+        opened_handle,
+        memory_map.descriptor_size,
+        memory_map.map_size,
+    );
 
     loop {
         unsafe {
