@@ -1,4 +1,4 @@
-use crate::utils::fixed_buffer::encode_utf16_null_terminated;
+use crate::utils::print::encode_utf16_null_terminated;
 
 use super::{
     guids::{EFI_FILE_INFO_GUID, EfiGuid},
@@ -74,17 +74,10 @@ impl EfiFileProtocol {
         let mut new_handle = ptr::null_mut();
         let new_handle_ptr = &mut new_handle;
 
-        let mut utf16_buf = [0; 256];
-        let file_name_ptr = encode_utf16_null_terminated(file_name, &mut utf16_buf)
-            .expect("Failed to encode file name to UTF-16");
+        let file_name_utf16 = encode_utf16_null_terminated(file_name);
+        let file_name_ptr = file_name_utf16.as_ptr();
 
-        let _res = (self.open)(
-            self,
-            new_handle_ptr,
-            file_name_ptr.as_ptr(),
-            mode,
-            attributes,
-        );
+        let _res = (self.open)(self, new_handle_ptr, file_name_ptr, mode, attributes);
 
         if _res == EfiStatus::Success {
             unsafe {

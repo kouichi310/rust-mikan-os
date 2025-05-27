@@ -1,3 +1,4 @@
+pub mod allocator;
 pub mod boot_services;
 pub mod console;
 pub mod file_systems;

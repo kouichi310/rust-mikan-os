@@ -6,3 +6,7 @@ edition = "2024"
 [dependencies]
 spin = "0.10.0"
 utf16_literal = "0.2.1"
+
+[build-dependencies]
+chrono = "0.4.41"
+chrono-tz = "0.10.3"

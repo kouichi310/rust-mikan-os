@@ -1,3 +1,5 @@
+use crate::uefi::types::Char16;
+use alloc::vec::Vec;
 use core::{
     ptr::null_mut,
     sync::atomic::{AtomicPtr, Ordering},
@@ -7,42 +9,43 @@ use crate::uefi::console::EfiSimpleTextOutputProtocol;
 
 static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(null_mut());
 
-pub fn setup_console(table: &crate::uefi::system_table::EfiSystemTable) {
-    let out = table.con_out();
-    // AtomicPtr に格納
-    CON_OUT.store(out as *const _ as *mut _, Ordering::SeqCst);
-}
-
-fn str_to_utf16_buf(s: &str, buf: &mut [u16]) -> usize {
-    let mut len = 0;
-    for ch in s.encode_utf16() {
-        if len >= buf.len() - 1 {
-            break;
-        }
-        buf[len] = ch;
-        len += 1;
-    }
-    buf[len] = 0;
-    len + 1
+pub fn setup_console(cout: &EfiSimpleTextOutputProtocol) {
+    CON_OUT.store(cout as *const _ as *mut _, Ordering::SeqCst);
 }
 
 pub fn uefi_print_raw(s: &str) {
+    let mut utf16: Vec<u16> = s.encode_utf16().collect();
+    utf16.push(0); // NULL 終端
     unsafe {
         if let Some(con_out) = CON_OUT.load(Ordering::SeqCst).as_ref() {
-            let mut buf = [0u16; 256];
-            str_to_utf16_buf(s, &mut buf);
-            con_out.output_string(buf.as_ptr());
+            con_out.output_string(utf16.as_ptr());
         }
     }
+}
+
+pub fn encode_utf16_null_terminated(utf8_str: &str) -> Vec<Char16> {
+    let mut buf: Vec<Char16> = utf8_str.encode_utf16().collect();
+    buf.push(0);
+    buf
 }
 
 #[macro_export]
 macro_rules! uefi_println {
     ($fmt:literal $(, $arg:expr)* $(,)?) => {{
+        use alloc::string::String;
         use core::fmt::Write;
-        let mut buf = [0u8; 256];
-        let mut fb = $crate::utils::fixed_buffer::FixedBuffer::new(&mut buf);
-        let _ = write!(fb, concat!($fmt, "\r\n") $(, $arg)*);
-        $crate::utils::print::uefi_print_raw(core::str::from_utf8(fb.as_bytes()).unwrap_or("[utf8 error]"));
+        let mut s = String::new();
+        let _ = write!(s, concat!($fmt, "\r\n") $(, $arg)*);
+        $crate::utils::print::uefi_print_raw(&s);
+    }};
+}
+
+#[macro_export]
+macro_rules! uefi_print {
+    ($fmt:literal $(, $arg:expr)* $(,)?) => {{
+        use alloc::string::String;
+        use core::fmt::Write;
+        let mut s = String::new();
+        $crate::utils::print::uefi_print_raw(&s);
     }};
 }

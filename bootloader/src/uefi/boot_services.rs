@@ -1,4 +1,4 @@
-use core::ffi::c_void;
+use core::{ffi::c_void, ptr::null_mut};
 
 use crate::uefi_println;
 
@@ -33,7 +33,7 @@ pub struct EfiBootServices {
     ) -> EfiStatus,
     allocate_pool:
         extern "efiapi" fn(pooltype: EfiMemoryType, size: usize, buffer: &mut *mut u8) -> EfiStatus,
-    free_pool: extern "efiapi" fn(address: *mut u8) -> EfiStatus,
+    free_pool: extern "efiapi" fn(address: *const c_void) -> EfiStatus,
     create_event: NotImplemented,
     set_timer: NotImplemented,
     wait_for_event: NotImplemented,
@@ -159,6 +159,31 @@ impl EfiBootServices {
         let _res = (self.allocate_pages)(allocate_type, memory_type, pages, &mut memory);
         if _res == EfiStatus::Success {
             Ok(memory)
+        } else {
+            Err(_res)
+        }
+    }
+
+    pub fn allocate_pool(
+        &self,
+        pool_type: EfiMemoryType,
+        size: usize,
+    ) -> Result<*mut u8, EfiStatus> {
+        let mut buffer: *mut u8 = null_mut();
+        let _res = (self.allocate_pool)(pool_type, size, &mut buffer);
+
+        if _res == EfiStatus::Success && !buffer.is_null() {
+            Ok(buffer)
+        } else {
+            Err(_res)
+        }
+    }
+
+    pub fn free_pool(&self, buffer: *const c_void) -> Result<EfiStatus, EfiStatus> {
+        let _res = (self.free_pool)(buffer);
+
+        if _res == EfiStatus::Success {
+            Ok(_res)
         } else {
             Err(_res)
         }

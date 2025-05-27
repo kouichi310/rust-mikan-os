@@ -1,8 +1,13 @@
 //! Refactored UEFI bootloader `main.rs`
 #![no_main]
 #![no_std]
+#![feature(alloc_error_handler)]
 
-use core::{arch::asm, fmt::Write, panic::PanicInfo};
+extern crate alloc;
+
+use alloc::format;
+use core::{arch::asm, panic::PanicInfo};
+use uefi::allocator::init_allocator;
 use uefi::status::EfiStatus;
 use uefi::system_table::EfiSystemTable;
 
@@ -20,7 +25,7 @@ use uefi::{
     guids::{EFI_LOADED_IMAGE_PROTOCOL_GUID, EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID},
     types::{EfiAllocateType, EfiHandle, EfiMemoryType},
 };
-use utils::{fixed_buffer::FixedBuffer, print::setup_console};
+use utils::print::setup_console;
 
 const KERNEL_BASE_ADDR: u64 = 0x0010_0000;
 
@@ -80,39 +85,35 @@ fn get_memory_type_name(memory_type: u32) -> &'static str {
 /// Save memory map to a CSV file
 fn save_memory_map(memmap: &MemoryMap, file: &EfiFileProtocol) -> Result<(), EfiStatus> {
     let header = "Index,\t\tType,\tType(name),\tPhysicalStart,\tNumberOfPages,\tAttribute\n";
-    let len = header.len();
-    let written_size = file.write(len, header.as_ptr()).unwrap();
-    if written_size != len {
-        uefi_println!("Failed to write header to file");
+    let written = file.write(header.len(), header.as_ptr()).unwrap();
+    if written != header.len() {
+        uefi_println!("Failed to write memory map header");
         return Err(EfiStatus::EfiLoadError);
     }
 
     let mut index = 0;
     let mut offset = 0;
+
     while offset < memmap.map_size {
         let desc = unsafe {
             (memmap.buf.as_ptr().add(offset) as *const uefi::memory::EfiMemoryDescriptor)
                 .as_ref()
                 .unwrap()
         };
-        let mut buf = [0u8; 128];
-        let mut fb = FixedBuffer::new(&mut buf);
-        writeln!(
-            fb,
-            "{:<5} {:<6} {:<25} {:#016x} {:#012x} {:#018x}",
+
+        // format!で直接書式化
+        let line = format!(
+            "{:<5} {:<6} {:<25} {:#016x} {:#012x} {:#018x}\n",
             index,
             desc.memory_type,
             get_memory_type_name(desc.memory_type),
             desc.physical_start,
             desc.number_of_pages,
             desc.attribute,
-        )
-        .unwrap();
+        );
 
-        let _res = file
-            .write(fb.as_bytes().len(), fb.as_bytes().as_ptr())
-            .unwrap();
-        if _res != fb.as_bytes().len() {
+        let written = file.write(line.len(), line.as_ptr()).unwrap();
+        if written != line.len() {
             uefi_println!("Failed to write memory descriptor to file");
             return Err(EfiStatus::EfiLoadError);
         }
@@ -120,6 +121,7 @@ fn save_memory_map(memmap: &MemoryMap, file: &EfiFileProtocol) -> Result<(), Efi
         index += 1;
         offset += memmap.desc_size;
     }
+
     file.close().ok();
     uefi_println!("Memory map saved to file successfully");
     Ok(())
@@ -195,7 +197,13 @@ pub extern "efiapi" fn efi_main(
     image_handle: EfiHandle,
     system_table: &'static EfiSystemTable,
 ) -> EfiStatus {
-    setup_console(system_table);
+    setup_console(system_table.con_out());
+    init_allocator(system_table.boot_services());
+    const BUILD_TIMESTAMP: &str = env!("BUILD_TIMESTAMP");
+    uefi_println!(
+        "MikanOS Bootloader - Build Timestamp(JST): {}",
+        BUILD_TIMESTAMP
+    );
     uefi_println!("Starting UEFI bootloader");
 
     let bs = system_table.boot_services();
@@ -232,6 +240,7 @@ pub extern "efiapi" fn efi_main(
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
+    uefi_println!("Panic occurred: {}", _info);
     loop {
         unsafe {
             asm!("hlt");
