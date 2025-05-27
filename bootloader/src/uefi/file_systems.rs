@@ -1,4 +1,4 @@
-use crate::utils::fixed_buffer::encode_utf16_null_terminated;
+use crate::utils::print::encode_utf16_null_terminated;
 
 use super::{
     guids::{EFI_FILE_INFO_GUID, EfiGuid},
@@ -6,7 +6,7 @@ use super::{
     system_table::EfiSystemTable,
     types::{Char16, EfiFileAttribute, EfiFileInfo, EfiFileOpenMode, EfiHandle, EfiMemoryType},
 };
-use core::{ffi::c_void, ptr};
+use core::{ffi::c_void, mem::size_of, ptr};
 
 pub const EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL: u32 = 0x00000001;
 
@@ -74,24 +74,17 @@ impl EfiFileProtocol {
         let mut new_handle = ptr::null_mut();
         let new_handle_ptr = &mut new_handle;
 
-        let mut utf16_buf = [0; 256];
-        let file_name_ptr = encode_utf16_null_terminated(file_name, &mut utf16_buf)
-            .expect("Failed to encode file name to UTF-16");
+        let file_name_utf16 = encode_utf16_null_terminated(file_name);
+        let file_name_ptr = file_name_utf16.as_ptr();
 
-        let _res = (self.open)(
-            self,
-            new_handle_ptr,
-            file_name_ptr.as_ptr(),
-            mode,
-            attributes,
-        );
+        let _res = (self.open)(self, new_handle_ptr, file_name_ptr, mode, attributes);
 
         if _res == EfiStatus::Success {
             unsafe {
                 if let Some(handle_ref) = new_handle.as_ref() {
                     Ok(handle_ref)
                 } else {
-                    Err(EfiStatus::DeviceError) // Return an appropriate error if null
+                    Err(EfiStatus::EfiDeviceError) // Return an appropriate error if null
                 }
             }
         } else {
@@ -131,7 +124,7 @@ impl EfiFileProtocol {
     }
 
     pub fn get_info(&self) -> Result<EfiFileInfo, EfiStatus> {
-        let mut buffer = [0u8; 1024];
+        let mut buffer = [0u8; size_of::<EfiFileInfo>() + size_of::<Char16>() * 23];
 
         let buffer_ptr = buffer.as_mut_ptr() as *mut c_void;
         let _res = (self.get_info)(self, &EFI_FILE_INFO_GUID, &(buffer.len()), buffer_ptr);

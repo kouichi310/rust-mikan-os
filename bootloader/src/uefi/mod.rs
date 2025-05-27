@@ -1,6 +1,8 @@
+pub mod allocator;
 pub mod boot_services;
 pub mod console;
 pub mod file_systems;
+pub mod graphics;
 pub mod guids;
 pub mod memory;
 pub mod status;

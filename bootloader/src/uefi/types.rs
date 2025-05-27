@@ -92,3 +92,73 @@ pub enum EfiAllocateType {
     AllocateAddress,
     MaxAllocateType,
 }
+
+#[allow(dead_code)]
+#[repr(C)]
+pub enum EfiLocateSearchType {
+    AllHandles,
+    ByRegisterNotify,
+    ByProtocol,
+    ByHandle,
+    ByDevicePath,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub enum EfiGraphicsPixelFormat {
+    PixelRedGreenBlueReserved8BitPerClolor,
+    PixelBlueGreenRedReserved8BitPerColor,
+    PixelBitMask,
+    PixelBitOnly,
+    PixelFormatMMax,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub enum EfiGraphicsOutputBltOperation {
+    BltVideoFill,
+    BltVideoToVltBuffer,
+    BltBufferToVideo,
+    BitVideoToVideo,
+    GraphicsOutputBltOperationMax,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct EfiGraphicsOutputBltPixel {
+    blue: u8,
+    green: u8,
+    red: u8,
+    _reserved: u8,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct EfiPixelBitmask {
+    red_mask: u32,
+    green_mask: u32,
+    blue_mask: u32,
+    reserved_mask: u32,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct EfiGraphicsOutputProtocolMode<'a> {
+    pub max_mode: u32,
+    pub mode: u32,
+    pub info: &'a EfiGraphicsOutputModeInformation,
+    pub size_of_info: usize,
+    pub frame_buffer_base: EfiPhysicalAddress,
+    pub frame_buffer_size: usize,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct EfiGraphicsOutputModeInformation {
+    version: u32,
+    pub horizontal_resolution: u32,
+    pub vertical_resolution: u32,
+    pixel_format: EfiGraphicsPixelFormat,
+    pixel_information: EfiPixelBitmask,
+    pixel_per_scan_line: u32,
+}
