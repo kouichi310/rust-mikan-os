@@ -171,8 +171,9 @@ fn load_kernel(root: &EfiFileProtocol, bs: &EfiBootServices) -> Result<fn(), Efi
 
     kernel.read(size, KERNEL_BASE_ADDR)?;
 
-    const KERNEL_ENTRY_OFFSET: usize = 24;
+    const KERNEL_ENTRY_OFFSET: u64 = 24;
     let entry = unsafe { *((KERNEL_BASE_ADDR + KERNEL_ENTRY_OFFSET) as *const u64) };
+    uefi_println!("Kernel entry point: {:#x}", entry);
     Ok(unsafe { core::mem::transmute::<*const (), fn()>(entry as usize as *const ()) })
 }
 
@@ -181,6 +182,7 @@ fn exit_and_jump(bs: &EfiBootServices, image_handle: EfiHandle, map_key: usize, 
     let _ = bs.exit_boot_service(image_handle, map_key);
     uefi_println!("Exiting boot services and jumping to kernel...");
     entry();
+    uefi_println!("Kernel entry function returned unexpectedly");
     loop {
         unsafe {
             asm!("hlt");
