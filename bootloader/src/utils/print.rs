@@ -46,6 +46,7 @@ macro_rules! uefi_print {
         use alloc::string::String;
         use core::fmt::Write;
         let mut s = String::new();
+        let _ = write!(s, $fmt $(, $arg)*);
         $crate::utils::print::uefi_print_raw(&s);
     }};
 }
