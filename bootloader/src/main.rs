@@ -159,7 +159,7 @@ fn open_root_dir(
     fs.open_volume()
 }
 
-type KernelMainT = unsafe extern "sysv64" fn(*mut u64, u64);
+type KernelMainT = unsafe extern "C" fn(*mut u64, u64);
 /// Load kernel binary and return its entry point function pointer
 fn load_kernel(root: &EfiFileProtocol, bs: &EfiBootServices) -> Result<KernelMainT, EfiStatus> {
     let kernel = root.open(
@@ -169,11 +169,12 @@ fn load_kernel(root: &EfiFileProtocol, bs: &EfiBootServices) -> Result<KernelMai
     )?;
     let info = kernel.get_info()?;
     let size = info.file_size as usize;
+    let pages = (size + 0xfff) / 0x1000;
 
     bs.allocate_pages(
         EfiAllocateType::AllocateAddress,
         EfiMemoryType::EfiLoaderData,
-        size,
+        pages,
         KERNEL_BASE_ADDR,
     )?;
 
