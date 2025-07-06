@@ -28,7 +28,6 @@ pub const EFI_FILE_INFO_GUID: EfiGuid = EfiGuid {
     data_4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b],
 };
 
-#[allow(dead_code)]
 pub const EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID: EfiGuid = EfiGuid {
     data_1: 0x9042a9de,
     data_2: 0x23dc,
