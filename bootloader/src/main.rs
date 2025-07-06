@@ -159,7 +159,7 @@ fn open_root_dir(
     fs.open_volume()
 }
 
-type KernelMainT = unsafe extern "C" fn(*mut u64, u64);
+type KernelMainT = unsafe extern "sysv64" fn(*mut u64, u64);
 /// Load kernel binary and return its entry point function pointer
 fn load_kernel(root: &EfiFileProtocol, bs: &EfiBootServices) -> Result<KernelMainT, EfiStatus> {
     let kernel = root.open(
