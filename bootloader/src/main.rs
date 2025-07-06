@@ -6,6 +6,7 @@
 extern crate alloc;
 
 use alloc::format;
+use core::ptr::null;
 use core::{arch::asm, panic::PanicInfo};
 use uefi::allocator::init_allocator;
 use uefi::status::EfiStatus;
@@ -26,6 +27,10 @@ use uefi::{
     types::{EfiAllocateType, EfiHandle, EfiMemoryType},
 };
 use utils::print::setup_console;
+
+use crate::uefi::graphics::EfiGraphicsOutputProtocol;
+use crate::uefi::guids::EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+use crate::uefi::types::EfiLocateSearchType;
 
 const KERNEL_BASE_ADDR: u64 = 0x0010_0000;
 
@@ -192,6 +197,34 @@ fn exit_and_jump(bs: &EfiBootServices, image_handle: EfiHandle, map_key: usize, 
     }
 }
 
+fn open_gop(
+    image_handle: EfiHandle,
+    bs: &EfiBootServices,
+) -> Result<&EfiGraphicsOutputProtocol, EfiStatus> {
+    let (num_gop_handles, gop_handles) = bs.locate_handle_buffer(
+        EfiLocateSearchType::ByProtocol,
+        &EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID,
+        null(),
+    )?;
+    uefi_println!("Graphics Output Protocol opened successfully");
+    uefi_println!("Number of GOP handles found: {}", num_gop_handles);
+    let null_handle = EfiHandle(core::ptr::null_mut());
+    let _res = unsafe {
+        (bs.open_protocol(
+            gop_handles[0],
+            &EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID,
+            image_handle,
+            null_handle,
+            EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL,
+        )? as *const EfiGraphicsOutputProtocol)
+            .as_ref()
+            .unwrap()
+    };
+    bs.free_pool(gop_handles[0].0 as *const core::ffi::c_void)?;
+    uefi_println!("GOP handle opened successfully");
+    Ok(_res)
+}
+
 #[unsafe(no_mangle)]
 pub extern "efiapi" fn efi_main(
     image_handle: EfiHandle,
@@ -227,6 +260,20 @@ pub extern "efiapi" fn efi_main(
         .unwrap();
     if save_memory_map(&memmap, memmap_file).is_err() {
         uefi_println!("Failed to save memory map");
+    }
+
+    unsafe {
+        let gop = open_gop(image_handle, bs).unwrap();
+        uefi_println!(
+            "Resolution: {}x{}",
+            gop.mode.info.horizontal_resolution,
+            gop.mode.info.vertical_resolution
+        );
+
+        let frame_buffer = gop.mode.frame_buffer_base as *mut u8;
+        for i in 0..gop.mode.frame_buffer_size {
+            *(frame_buffer.offset(i.try_into().unwrap())) = 0;
+        }
     }
 
     match load_kernel(root, bs) {

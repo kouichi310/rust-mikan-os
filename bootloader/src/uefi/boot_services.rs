@@ -1,6 +1,8 @@
 use core::{ffi::c_void, ptr::null_mut};
 
-use crate::uefi_println;
+use alloc::vec::Vec;
+
+use crate::{uefi::types::EfiLocateSearchType, uefi_println};
 
 use super::{
     guids::EfiGuid,
@@ -75,7 +77,13 @@ pub struct EfiBootServices {
     ) -> EfiStatus,
     open_protocol_infomation: NotImplemented,
     protocols_per_handle: NotImplemented,
-    locate_handle_buffer: NotImplemented,
+    locate_handle_buffer: extern "efiapi" fn(
+        search_type: EfiLocateSearchType,
+        protocol: &EfiGuid,
+        search_key: *const c_void,
+        no_handles: *mut usize,
+        buffer: &mut *mut EfiHandle,
+    ) -> EfiStatus,
     locate_protocol: NotImplemented,
     install_multiple_protocol_interface: NotImplemented,
     uninstall_multiple_protocol_interface: NotImplemented,
@@ -200,6 +208,31 @@ impl EfiBootServices {
             Ok(_res)
         } else {
             Err(_res)
+        }
+    }
+
+    pub fn locate_handle_buffer(
+        &self,
+        search_type: EfiLocateSearchType,
+        protocol: &EfiGuid,
+        search_key: *const c_void,
+    ) -> Result<(usize, Vec<EfiHandle>), EfiStatus> {
+        let mut num_handles = 0;
+        let mut handles_ptr: *mut EfiHandle = core::ptr::null_mut();
+        let status = (self.locate_handle_buffer)(
+            search_type,
+            protocol,
+            search_key,
+            &mut num_handles,
+            &mut handles_ptr,
+        );
+        if status == EfiStatus::Success {
+            unsafe {
+                let slice = core::slice::from_raw_parts(handles_ptr, num_handles);
+                Ok((num_handles, slice.to_vec()))
+            }
+        } else {
+            Err(status)
         }
     }
 }

@@ -6,7 +6,6 @@ use super::{
     },
 };
 
-#[allow(dead_code)]
 #[repr(C)]
 pub struct EfiGraphicsOutputProtocol<'a> {
     pub query_mode: extern "efiapi" fn(

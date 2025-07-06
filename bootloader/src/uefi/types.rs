@@ -141,7 +141,6 @@ pub struct EfiPixelBitmask {
     reserved_mask: u32,
 }
 
-#[allow(dead_code)]
 #[repr(C)]
 pub struct EfiGraphicsOutputProtocolMode<'a> {
     pub max_mode: u32,
